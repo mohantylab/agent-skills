@@ -1,0 +1,36 @@
+{
+  "skill_id": "code_assistant",
+  "version": "1.0.0",
+  "examples": [
+    {
+      "id": "ex_001",
+      "label": "Bug review",
+      "question": "Review this Python code for bugs:\ndef divide(a, b):\n    return a / b\n\nresult = divide(10, 0)\nprint(result)",
+      "expected_output": {"action": "review", "issues_min": 1}
+    },
+    {
+      "id": "ex_002",
+      "label": "Generate function",
+      "question": "Write a Python function that takes a list of dicts and uploads them to BigQuery as a new table",
+      "expected_output": {"action": "generate", "language": "python"}
+    },
+    {
+      "id": "ex_003",
+      "label": "Explain SQL",
+      "question": "Explain what this SQL does:\nSELECT DATE_TRUNC(date, MONTH) as month, SUM(revenue) as total FROM sales GROUP BY 1 ORDER BY 1",
+      "expected_output": {"action": "explain", "language": "sql"}
+    },
+    {
+      "id": "ex_004",
+      "label": "Generate FastAPI",
+      "question": "Generate a FastAPI POST endpoint for /auth/login that validates username and password",
+      "expected_output": {"action": "generate", "language": "python"}
+    },
+    {
+      "id": "ex_005",
+      "label": "Refactor code",
+      "question": "Refactor this code to use async/await:\nimport requests\ndef get_data(url):\n    r = requests.get(url)\n    return r.json()",
+      "expected_output": {"action": "review", "language": "python"}
+    }
+  ]
+}

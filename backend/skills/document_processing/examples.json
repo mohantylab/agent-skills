@@ -1,0 +1,21 @@
+{
+  "skill_id": "document_processing",
+  "version": "1.3.0",
+  "examples": [
+    {
+      "id": "ex_001",
+      "label": "Meeting notes",
+      "question": "Summarise this: Team meeting 12 Jan. Attendees: Alice, Bob, Carol. We agreed to launch the new pricing in March. Bob will update the deck by Friday. Carol to coordinate with legal by end of month. Overall positive progress.",
+      "expected_output_keys": ["headline", "key_points", "action_items", "decisions", "sentiment"]
+    },
+    {
+      "id": "ex_002",
+      "label": "Email extraction",
+      "question": "Extract action items from: Hi team, following our call, please note: 1) Dev team to fix the login bug by Thursday. 2) Sales to prepare Q2 pipeline report by Monday. 3) We have decided to postpone the launch to April.",
+      "expected_output": {
+        "decisions": ["Postpone launch to April"],
+        "action_items_count": 2
+      }
+    }
+  ]
+}

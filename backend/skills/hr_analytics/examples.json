@@ -1,0 +1,37 @@
+{
+  "skill_id": "hr_analytics",
+  "version": "1.0.0",
+  "examples": [
+    {
+      "id": "ex_001",
+      "label": "Headcount by dept",
+      "question": "What is our current headcount by department?",
+      "expected_sql_contains": ["COUNT", "department", "status = 'active'"]
+    },
+    {
+      "id": "ex_002",
+      "label": "Attrition rate",
+      "question": "Show me voluntary attrition rate by department for the last 6 months",
+      "expected_sql_contains": ["attrition_events", "voluntary", "DATE_SUB"]
+    },
+    {
+      "id": "ex_003",
+      "label": "Open roles",
+      "question": "How many open roles are there in Engineering and what levels?",
+      "expected_sql_contains": ["open_roles", "department", "level", "status = 'open'"]
+    },
+    {
+      "id": "ex_004",
+      "label": "Tenure",
+      "question": "What is the average employee tenure in months by team?",
+      "expected_sql_contains": ["DATE_DIFF", "start_date", "team"]
+    },
+    {
+      "id": "ex_005",
+      "label": "Comp bands",
+      "question": "Show me the distribution of employees across compensation bands",
+      "expected_privacy_note": true,
+      "expected_sql_contains": ["compensation", "band", "COUNT"]
+    }
+  ]
+}

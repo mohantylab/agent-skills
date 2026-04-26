@@ -1,0 +1,15 @@
+# Copy to terraform.tfvars and fill in your values.
+# Never commit terraform.tfvars to Git.
+
+project_id              = "your-gcp-project-id"
+region                  = "us-central1"
+env                     = "prod"
+app_name                = "skill-agent"
+bq_dataset              = "analytics"
+cloud_sql_tier          = "db-g1-small"        # use db-n1-standard-2 for prod
+cloud_sql_db_name       = "skill_agent"
+cloud_sql_user          = "skill_agent_app"
+cloud_run_min_instances = 1
+cloud_run_max_instances = 10
+token_ttl_hours         = 8
+alert_email             = "your-team@company.com"

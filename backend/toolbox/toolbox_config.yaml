@@ -1,0 +1,54 @@
+server:
+  port: 5000
+  log_level: info
+
+sources:
+  bigquery:
+    kind: bigquery
+    project: "${GCP_PROJECT_ID}"
+    dataset: "${BQ_DATASET}"
+  cloud_sql_postgres:
+    kind: cloud-sql-postgres
+    project: "${GCP_PROJECT_ID}"
+    region:  "${GCP_REGION}"
+    instance: "${CLOUD_SQL_INSTANCE}"
+    database: "${DB_NAME}"
+    user:     "${DB_USER}"
+    secret_ref:
+      name: "${SECRET_NAME_DB}"
+      key:  password
+
+tools:
+  - name: bigquery_execute
+    kind: bigquery-query
+    source: bigquery
+    description: "Execute a BigQuery SQL query and return rows"
+    parameters:
+      - name: query
+        type: string
+  - name: bigquery_schema
+    kind: bigquery-schema
+    source: bigquery
+    description: "Return schema for a BigQuery table"
+    parameters:
+      - name: table
+        type: string
+  - name: postgres_execute
+    kind: postgres-query
+    source: cloud_sql_postgres
+    description: "Execute a Postgres SQL query and return rows"
+    parameters:
+      - name: query
+        type: string
+
+auth:
+  require_google_id_token: true
+  allowed_service_accounts:
+    - "skill-agent-orchestrator@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+
+pool:
+  bigquery:
+    max_connections: 10
+  cloud_sql_postgres:
+    min_connections: 2
+    max_connections: 20

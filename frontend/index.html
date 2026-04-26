@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Skill Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#090c10;--surf:#0f1318;--card:#141920;--bd:#1c2333;--bd2:#252f42;
+  --acc:#4f8ef7;--acc2:#7c6af5;--green:#3dd68c;--red:#f06464;--amber:#f5a623;
+  --teal:#2dd4bf;--pink:#e879a0;--text:#e6eaf2;--muted:#7a8899;--faint:#252f42;
+  --mono:'IBM Plex Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;height:100vh;overflow:hidden;}
+code{font-family:var(--mono);font-size:12px;background:var(--faint);padding:1px 5px;border-radius:4px;}
+
+/* ════ LOGIN ════ */
+#login{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:var(--bg);transition:opacity .35s,transform .35s;}
+#login.out{opacity:0;transform:scale(.97);pointer-events:none;}
+.lbox{width:380px;background:var(--card);border:1px solid var(--bd2);border-radius:16px;padding:36px;position:relative;overflow:hidden;}
+.lbox::before{content:'';position:absolute;top:-60px;left:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(79,142,247,.12) 0%,transparent 70%);pointer-events:none;}
+.l-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+.l-ico{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:15px;}
+.l-brand{font-size:15px;font-weight:600;}.l-brand span{color:var(--muted);font-weight:300;}
+.l-title{font-size:20px;font-weight:600;margin-bottom:4px;}
+.l-sub{color:var(--muted);font-size:12px;margin-bottom:22px;}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;}
+.field input{width:100%;background:var(--surf);border:1px solid var(--bd2);border-radius:9px;padding:10px 13px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;}
+.field input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,142,247,.14);}
+.field input::placeholder{color:var(--faint);}
+.l-btn{width:100%;padding:11px;background:linear-gradient(135deg,var(--acc),var(--acc2));border:none;border-radius:9px;cursor:pointer;color:#fff;font-family:var(--sans);font-size:14px;font-weight:500;transition:opacity .2s;}
+.l-btn:hover{opacity:.88;}.l-btn:disabled{opacity:.45;cursor:not-allowed;}
+.l-err{background:rgba(240,100,100,.1);border:1px solid rgba(240,100,100,.25);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--red);margin-bottom:12px;display:none;}
+.l-err.show{display:block;}
+.l-hint{font-size:10px;color:var(--faint);text-align:center;margin-top:12px;}
+.l-sec{display:flex;align-items:center;gap:5px;margin-top:12px;font-size:10px;color:var(--faint);}
+.l-sec .d{width:5px;height:5px;background:var(--green);border-radius:50%;}
+
+/* ════ APP SHELL ════ */
+#app{display:flex;height:100vh;opacity:0;transition:opacity .35s .1s;}
+#app.vis{opacity:1;}
+
+/* ════ LEFT PANEL — SKILL FOLDERS ════ */
+.lpanel{width:220px;min-width:220px;background:var(--surf);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;}
+.lp-header{padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:9px;}
+.lp-ico{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:12px;}
+.lp-brand{font-size:13px;font-weight:600;}
+.lp-body{flex:1;overflow-y:auto;padding:8px 0;}
+.lp-body::-webkit-scrollbar{width:3px;}.lp-body::-webkit-scrollbar-thumb{background:var(--faint);border-radius:2px;}
+.lp-section{padding:10px 14px 4px;}
+.lp-sec-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);font-weight:500;margin-bottom:6px;}
+
+/* Skill folder nav item */
+.sf-item{display:flex;align-items:center;gap:9px;padding:7px 12px;border-radius:8px;cursor:pointer;transition:background .15s;margin:1px 6px;position:relative;}
+.sf-item:hover{background:var(--card);}
+.sf-item.act{background:rgba(79,142,247,.1);}
+.sf-item.act .sf-name{color:var(--acc);}
+.sf-ico{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+.sf-name{font-size:12px;color:var(--muted);font-weight:400;flex:1;}
+.sf-item.act .sf-name{font-weight:500;}
+.sf-item.act::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--acc);border-radius:0 3px 3px 0;}
+.sf-badge{font-size:9px;font-family:var(--mono);color:var(--faint);background:var(--faint);padding:1px 5px;border-radius:3px;}
+
+/* System nav (Home / Chat) */
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:12px;color:var(--muted);transition:background .15s;margin:1px 6px;}
+.nav-item:hover{background:var(--card);color:var(--text);}
+.nav-item.act{background:rgba(79,142,247,.1);color:var(--acc);}
+.nav-item .ni{font-size:15px;width:22px;text-align:center;}
+
+.lp-footer{padding:12px 14px;border-top:1px solid var(--bd);}
+.user-row{display:flex;align-items:center;gap:8px;}
+.uav{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
+.u-name{font-size:12px;font-weight:500;}.u-role{font-size:10px;color:var(--muted);}
+.lout-btn{margin-left:auto;background:none;border:1px solid var(--bd2);border-radius:5px;padding:2px 7px;font-size:10px;color:var(--muted);cursor:pointer;transition:all .15s;}
+.lout-btn:hover{color:var(--red);border-color:var(--red);}
+
+/* ════ MAIN AREA ════ */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{padding:12px 24px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.tb-left .tb-title{font-size:15px;font-weight:600;}
+.tb-left .tb-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.tb-right{display:flex;align-items:center;gap:10px;}
+.online-pill{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--green);background:rgba(61,214,140,.08);border:1px solid rgba(61,214,140,.2);padding:3px 10px;border-radius:20px;}
+.online-pill .d{width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.view-tabs{display:flex;background:var(--surf);border:1px solid var(--bd2);border-radius:8px;overflow:hidden;}
+.vt{padding:5px 12px;font-size:11px;color:var(--muted);cursor:pointer;border:none;background:none;font-family:var(--sans);transition:all .15s;}
+.vt.act{background:rgba(79,142,247,.15);color:var(--acc);}
+
+/* ════ VIEWS ════ */
+.view{flex:1;overflow-y:auto;display:none;flex-direction:column;}
+.view.show{display:flex;}
+.view::-webkit-scrollbar{width:3px;}.view::-webkit-scrollbar-thumb{background:var(--faint);border-radius:2px;}
+
+/* ── LANDING VIEW ── */
+#landing{padding:28px 24px;}
+.lp-welcome h1{font-size:22px;font-weight:600;margin-bottom:5px;}
+.lp-welcome p{color:var(--muted);font-size:13px;max-width:520px;margin-bottom:26px;}
+.skill-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:28px;}
+
+/* Skill card */
+.sk-card{background:var(--card);border:1px solid var(--bd2);border-radius:14px;padding:20px;cursor:pointer;transition:border-color .2s,transform .12s;position:relative;overflow:hidden;}
+.sk-card:hover{transform:translateY(-2px);}
+.sk-card.highlighted{border-color:var(--acc);}
+.sk-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0;background:var(--card-accent, var(--acc));}
+.sk-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sk-icon{font-size:20px;}
+.sk-name{font-size:14px;font-weight:500;flex:1;}
+.sk-ver{font-size:9px;font-family:var(--mono);color:var(--faint);background:var(--surf);border:1px solid var(--bd);padding:1px 6px;border-radius:3px;}
+.sk-desc{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:12px;}
+.sk-examples{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.sk-ex{background:var(--surf);border:1px solid var(--bd);border-radius:7px;padding:7px 10px;font-size:11px;color:var(--text);display:flex;align-items:flex-start;gap:6px;cursor:pointer;transition:border-color .15s;}
+.sk-ex:hover{border-color:var(--acc);}
+.sk-ex-lbl{color:var(--faint);font-family:var(--mono);font-size:9px;white-space:nowrap;margin-top:1px;}
+.sk-footer{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.sk-cat{font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:3px;background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.2);color:var(--teal);}
+.sk-tool{font-size:9px;font-family:var(--mono);color:var(--faint);}
+.sk-src{font-size:9px;font-family:var(--mono);color:var(--faint);display:flex;align-items:center;gap:4px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);}
+.sk-src-dot{width:4px;height:4px;background:var(--amber);border-radius:50%;}
+.sk-launch{margin-left:auto;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:var(--sans);transition:opacity .2s;}
+.sk-launch:hover{opacity:.85;}
+
+/* Recent queries */
+.section-title{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.recent-list{display:flex;flex-direction:column;gap:6px;}
+.recent-item{background:var(--card);border:1px solid var(--bd);border-radius:9px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .15s;}
+.recent-item:hover{border-color:var(--acc);}
+.ri-icon{font-size:13px;}
+.ri-q{font-size:12px;flex:1;color:var(--text);}
+.ri-skill{font-size:10px;font-family:var(--mono);color:var(--muted);}
+.ri-ms{font-size:9px;color:var(--faint);}
+
+/* ── CHAT VIEW ── */
+#chat{flex-direction:column;}
+.demo-bar{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-radius:8px;padding:8px 13px;font-size:11px;color:var(--amber);display:flex;align-items:flex-start;gap:6px;flex-shrink:0;margin:14px 24px 0;}
+.chat-msgs{flex:1;overflow-y:auto;padding:18px 24px;display:flex;flex-direction:column;gap:14px;}
+.chat-msgs::-webkit-scrollbar{width:3px;}.chat-msgs::-webkit-scrollbar-thumb{background:var(--faint);border-radius:2px;}
+
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg{animation:fu .28s ease;}
+.msg-user{display:flex;justify-content:flex-end;}
+.msg-user .bub{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-radius:13px 13px 3px 13px;padding:10px 15px;max-width:66%;font-size:13px;}
+.msg-agent{display:flex;flex-direction:column;gap:6px;}
+.a-hdr{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted);}
+.a-ico{width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:9px;}
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:3px;}
+.tag-skill{background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);color:var(--acc);}
+.tag-src{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);color:var(--amber);}
+.tag-tool{background:rgba(240,100,100,.08);border:1px solid rgba(240,100,100,.2);color:var(--red);}
+.tag-ok{background:rgba(61,214,140,.08);border:1px solid rgba(61,214,140,.2);color:var(--green);}
+
+/* Result card */
+.rc{background:var(--card);border:1px solid var(--bd2);border-radius:13px;overflow:hidden;max-width:96%;}
+.rc-sum{padding:12px 16px;font-size:13px;line-height:1.6;border-bottom:1px solid var(--bd);}
+.rc-sql{padding:9px 16px;background:var(--surf);border-bottom:1px solid var(--bd);}
+.rc-sql .lbl{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:4px;font-family:var(--mono);}
+.rc-sql pre{font-family:var(--mono);font-size:10px;color:var(--amber);white-space:pre-wrap;word-break:break-all;}
+.rc-tbl-wrap{overflow-x:auto;padding:9px 16px;}
+.rc-tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.rc-tbl th{font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;padding:3px 7px;border-bottom:1px solid var(--bd);}
+.rc-tbl td{padding:5px 7px;border-bottom:1px solid var(--bd);color:var(--text);}
+.rc-tbl tr:last-child td{border-bottom:none;}.rc-tbl tr:hover td{background:var(--surf);}
+.rc-foot{padding:7px 16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+
+/* Doc result */
+.doc-body{padding:14px 16px;}
+.doc-headline{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:12px;}
+.doc-sec{margin-bottom:10px;}
+.doc-lbl{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:5px;font-family:var(--mono);}
+.doc-item{display:flex;gap:7px;font-size:12px;color:var(--muted);margin-bottom:3px;line-height:1.4;}
+.doc-item::before{content:'›';color:var(--acc);flex-shrink:0;}
+.sent{display:inline-flex;font-size:9px;padding:2px 7px;border-radius:3px;font-family:var(--mono);}
+.s-pos{background:rgba(61,214,140,.08);border:1px solid rgba(61,214,140,.2);color:var(--green);}
+.s-neg{background:rgba(240,100,100,.08);border:1px solid rgba(240,100,100,.2);color:var(--red);}
+.s-neu{background:rgba(122,131,150,.08);border:1px solid rgba(122,131,150,.2);color:var(--muted);}
+.s-mix{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);color:var(--amber);}
+
+/* Research result */
+.res-ans{padding:12px 16px;font-size:13px;line-height:1.6;border-bottom:1px solid var(--bd);}
+.res-findings{padding:9px 16px;border-bottom:1px solid var(--bd);}
+.res-f{display:flex;gap:7px;font-size:12px;color:var(--muted);margin-bottom:4px;}
+.res-f::before{content:'◆';font-size:7px;color:var(--teal);flex-shrink:0;margin-top:4px;}
+.res-srcs{padding:7px 16px;background:var(--surf);}
+.res-src{font-size:10px;font-family:var(--mono);color:var(--faint);margin-bottom:2px;}
+.conf{font-size:9px;padding:2px 7px;border-radius:3px;font-family:var(--mono);margin:7px 16px;display:inline-flex;}
+.c-h{background:rgba(61,214,140,.08);border:1px solid rgba(61,214,140,.2);color:var(--green);}
+.c-m{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);color:var(--amber);}
+.c-l{background:rgba(240,100,100,.08);border:1px solid rgba(240,100,100,.2);color:var(--red);}
+
+/* Code result */
+.code-body{padding:14px 16px;}
+.code-exp{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:12px;}
+.code-block{background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:12px;}
+.code-block pre{font-family:var(--mono);font-size:11px;color:var(--text);white-space:pre-wrap;word-break:break-all;}
+.issue-item{display:flex;gap:6px;font-size:11px;color:var(--red);margin-bottom:3px;}
+.issue-item::before{content:'⚠';font-size:10px;flex-shrink:0;}
+.sugg-item{display:flex;gap:6px;font-size:11px;color:var(--muted);margin-bottom:3px;}
+.sugg-item::before{content:'→';color:var(--acc);flex-shrink:0;}
+
+/* Loading */
+.loading-bub{background:var(--card);border:1px solid var(--bd2);border-radius:12px 12px 12px 3px;padding:10px 14px;max-width:140px;display:flex;gap:4px;align-items:center;}
+.ld{width:5px;height:5px;background:var(--acc);border-radius:50%;animation:bounce 1.2s infinite;}
+.ld:nth-child(2){animation-delay:.2s;}.ld:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,80%,100%{transform:scale(.7);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* Input bar */
+.ibar{padding:12px 24px;border-top:1px solid var(--bd);background:var(--surf);flex-shrink:0;}
+.iwrap{display:flex;gap:8px;align-items:flex-end;background:var(--card);border:1px solid var(--bd2);border-radius:13px;padding:8px 12px;transition:border-color .2s,box-shadow .2s;}
+.iwrap:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,142,247,.1);}
+#qi{flex:1;background:none;border:none;outline:none;font-family:var(--sans);font-size:13px;color:var(--text);resize:none;max-height:90px;line-height:1.5;}
+#qi::placeholder{color:var(--faint);}
+.sbtn{width:30px;height:30px;flex-shrink:0;background:linear-gradient(135deg,var(--acc),var(--acc2));border:none;border-radius:7px;cursor:pointer;color:#fff;font-size:13px;transition:opacity .2s;align-self:flex-end;}
+.sbtn:hover{opacity:.85;}.sbtn:disabled{opacity:.35;cursor:not-allowed;}
+.ih{font-size:10px;color:var(--faint);margin-top:6px;text-align:center;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lbox">
+    <div class="l-logo"><div class="l-ico">⚡</div><div class="l-brand">SkillAgent <span>/ GCP</span></div></div>
+    <div class="l-title">Sign in</div>
+    <div class="l-sub">Corporate credentials via Secret Manager</div>
+    <div class="l-err" id="l-err"></div>
+    <div class="field"><label>User ID</label><input type="text" id="un" placeholder="your.name" autocomplete="off"/></div>
+    <div class="field"><label>Password</label><input type="password" id="pw" placeholder="••••••••"/></div>
+    <button class="l-btn" id="l-btn" onclick="doLogin()">Sign in</button>
+    <div class="l-hint">Demo: <b style="color:var(--text)">demo</b> / <b style="color:var(--text)">demo123</b></div>
+    <div class="l-sec"><div class="d"></div>SHA-256 · Secret Manager · Cloud SQL sessions</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- LEFT PANEL -->
+  <div class="lpanel">
+    <div class="lp-header">
+      <div class="lp-ico">⚡</div>
+      <div class="lp-brand">SkillAgent</div>
+    </div>
+    <div class="lp-body">
+      <div class="lp-section">
+        <div class="lp-sec-lbl">Views</div>
+        <div class="nav-item act" id="nav-home" onclick="setView('landing')">
+          <span class="ni">🏠</span>Home
+        </div>
+        <div class="nav-item" id="nav-chat" onclick="setView('chat')">
+          <span class="ni">💬</span>Chat
+        </div>
+      </div>
+      <div class="lp-section">
+        <div class="lp-sec-lbl">Skill folders</div>
+        <div id="sf-list"><!-- populated after login --></div>
+      </div>
+    </div>
+    <div class="lp-footer">
+      <div class="user-row">
+        <div class="uav" id="uav">?</div>
+        <div><div class="u-name" id="u-name">—</div><div class="u-role">Analyst</div></div>
+        <button class="lout-btn" onclick="doLogout()">Exit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-left">
+        <div class="tb-title" id="tb-title">Skills Home</div>
+        <div class="tb-sub" id="tb-sub">Skills loaded from skills/ folder · Gemini · BigQuery · Cloud SQL</div>
+      </div>
+      <div class="tb-right">
+        <div class="view-tabs">
+          <button class="vt act" id="vt-home" onclick="setView('landing')">🏠 Home</button>
+          <button class="vt" id="vt-chat" onclick="setView('chat')">💬 Chat</button>
+        </div>
+        <div class="online-pill"><div class="d"></div>Online</div>
+      </div>
+    </div>
+
+    <!-- LANDING VIEW -->
+    <div class="view show" id="landing">
+      <div id="landing-inner" style="padding:24px;"></div>
+    </div>
+
+    <!-- CHAT VIEW -->
+    <div class="view" id="chat">
+      <div class="demo-bar">⚠️ Demo mode — set <code>API_BASE</code> to your Cloud Run URL for live backend.</div>
+      <div class="chat-msgs" id="msgs"></div>
+      <div class="ibar">
+        <div class="iwrap">
+          <textarea id="qi" rows="1" placeholder="Ask anything — agent picks the right skill folder…" onkeydown="hk(event)" oninput="ar(this)"></textarea>
+          <button class="sbtn" onclick="sendQ()">➤</button>
+        </div>
+        <div class="ih">Enter to send · Shift+Enter new line</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://your-skill-agent-XXXXX.run.app";
+let tok=null, usr=null, recent=[], activeSkill=null;
+
+const SKILLS = [
+  {id:"data_analysis",folder:"data_analysis",name:"Data Analysis",icon:"📊",color:"#4f8ef7",category:"analytics",version:"2.0.0",
+   description:"Converts questions to BigQuery SQL via MCP Toolbox, returns insight summaries with data tables.",
+   landing_examples:["Show me revenue by region last quarter","Top products by units sold in January","Enterprise customer signups YTD"],
+   tools:["bigquery_tool"],keywords:["revenue","sales","units","region","product","top","total","count","data","query","metrics","kpi"]},
+  {id:"document_processing",folder:"document_processing",name:"Document Processing",icon:"📄",color:"#7c6af5",category:"productivity",version:"1.3.0",
+   description:"Extracts headline, key points, action items, decisions, and sentiment from any document text.",
+   landing_examples:["Summarise this meeting note","Extract action items from this email","What decisions were made in this report?"],
+   tools:["gcs_tool"],keywords:["summarise","summarize","summary","tldr","brief","key points","action items","extract","document","report","meeting","email"]},
+  {id:"web_research",folder:"web_research",name:"Web Research",icon:"🔍",color:"#2dd4bf",category:"research",version:"1.1.0",
+   description:"Returns structured research briefs with key findings and sources via Vertex AI Search.",
+   landing_examples:["Latest enterprise AI trends","Competitor overview for Salesforce","GCP vs AWS pricing comparison"],
+   tools:["vertex_search_tool"],keywords:["search","find","look up","latest","current","news","what is","who is","trend","market","competitor","industry"]},
+  {id:"code_assistant",folder:"code_assistant",name:"Code Assistant",icon:"💻",color:"#f5a623",category:"engineering",version:"1.0.0",
+   description:"Reviews code for bugs, generates boilerplate, explains snippets, converts pseudocode to Python or SQL.",
+   landing_examples:["Review this Python function for bugs","Generate a Cloud SQL connection class","Explain what this SQL query does"],
+   tools:["gcs_tool"],keywords:["code","review","bug","function","python","sql","script","refactor","explain","convert","implement","generate","class"]},
+  {id:"hr_analytics",folder:"hr_analytics",name:"HR Analytics",icon:"👥",color:"#e879a0",category:"people_ops",version:"1.0.0",
+   description:"Analyses headcount, attrition, hiring pipeline, and compensation data with privacy-aware SQL queries.",
+   landing_examples:["Headcount by department this quarter","Attrition rate last 6 months","Average days to fill by role"],
+   tools:["bigquery_tool","cloudsql_tool"],keywords:["headcount","employees","attrition","turnover","hiring","recruitment","compensation","salary","department","team","people","workforce"]},
+];
+
+function routeSkill(q){
+  q=q.toLowerCase();
+  let best=null,bs=0;
+  for(const s of SKILLS){const sc=s.keywords.filter(k=>q.includes(k)).length;if(sc>bs){bs=sc;best=s;}}
+  return best||SKILLS[0];
+}
+
+// AUTH
+function doLogin(){
+  const u=document.getElementById('un').value.trim();
+  const p=document.getElementById('pw').value;
+  const e=document.getElementById('l-err');
+  const b=document.getElementById('l-btn');
+  if(!u||!p){showErr('Enter user ID and password.');return;}
+  e.classList.remove('show');b.disabled=true;b.textContent='Signing in…';
+  setTimeout(()=>{
+    if(u==='demo'&&p==='demo123'){
+      tok='demo-'+Math.random().toString(36).slice(2);usr=u;
+      document.getElementById('login').classList.add('out');
+      document.getElementById('app').classList.add('vis');
+      document.getElementById('u-name').textContent=u;
+      document.getElementById('uav').textContent=u[0].toUpperCase();
+      buildLeftPanel();
+      renderLanding(null);
+    } else {
+      showErr('Invalid. Try demo / demo123');
+    }
+    b.disabled=false;b.textContent='Sign in';
+  },700);
+}
+function showErr(m){const e=document.getElementById('l-err');e.textContent=m;e.classList.add('show');}
+function doLogout(){
+  tok=null;usr=null;recent=[];activeSkill=null;
+  document.getElementById('app').classList.remove('vis');
+  document.getElementById('login').classList.remove('out');
+  document.getElementById('un').value='';document.getElementById('pw').value='';
+  document.getElementById('msgs').innerHTML='';
+}
+
+// LEFT PANEL
+function buildLeftPanel(){
+  const list=document.getElementById('sf-list');
+  list.innerHTML=SKILLS.map(s=>`
+    <div class="sf-item" id="sf-${s.id}" onclick="selectSkill('${s.id}')">
+      <span class="sf-ico">${s.icon}</span>
+      <span class="sf-name">${s.name}</span>
+      <span class="sf-badge">${s.folder}/</span>
+    </div>`).join('');
+}
+
+function selectSkill(id){
+  activeSkill=id;
+  document.querySelectorAll('.sf-item').forEach(el=>el.classList.remove('act'));
+  const el=document.getElementById(`sf-${id}`);
+  if(el)el.classList.add('act');
+  const skill=SKILLS.find(s=>s.id===id);
+  renderLanding(skill);
+  setView('landing');
+}
+
+// VIEW SWITCHING
+function setView(v){
+  document.getElementById('landing').classList.toggle('show',v==='landing');
+  document.getElementById('chat').classList.toggle('show',v==='chat');
+  ['nav-home','vt-home'].forEach(id=>document.getElementById(id).classList.toggle('act',v==='landing'));
+  ['nav-chat','vt-chat'].forEach(id=>document.getElementById(id).classList.toggle('act',v==='chat'));
+  if(v==='landing'){
+    document.getElementById('tb-title').textContent=activeSkill?SKILLS.find(s=>s.id===activeSkill).name+' Skill':'Skills Home';
+    document.getElementById('tb-sub').textContent='skills/'+activeSkill||'All skill folders';
+  } else {
+    document.getElementById('tb-title').textContent='Chat';
+    document.getElementById('tb-sub').textContent='Auto-routes to best skill folder';
+  }
+}
+
+// LANDING PAGE
+function renderLanding(focusSkill){
+  const el=document.getElementById('landing-inner');
+  const skills=focusSkill?[focusSkill]:SKILLS;
+  el.innerHTML=`
+    <div class="lp-welcome" style="margin-bottom:22px">
+      <h1>Welcome, ${usr||'—'}</h1>
+      <p>${focusSkill
+        ?`You selected the <strong>${focusSkill.name}</strong> skill folder. Click an example to launch, or switch to Chat.`
+        :'Select a skill folder on the left, or click any example to start. The agent routes your question to the right skill automatically.'}</p>
+    </div>
+    <div class="skill-grid">${skills.map(sk=>skCard(sk)).join('')}</div>
+    ${recent.length?`<div class="section-title">Recent</div><div class="recent-list">${recent.slice(0,5).map(r=>`
+      <div class="recent-item" onclick="rerun('${esc(r.q)}')">
+        <span class="ri-icon">${r.icon}</span>
+        <span class="ri-q">${esc(r.q.slice(0,60))}${r.q.length>60?'…':''}</span>
+        <span class="ri-skill">${r.name}</span>
+        <span class="ri-ms">${r.ms}ms</span>
+      </div>`).join('')}</div>`:''}`;
+}
+
+function skCard(s){
+  const accent=s.color||'#4f8ef7';
+  return `<div class="sk-card" id="skc-${s.id}" style="--card-accent:${accent}">
+    <div class="sk-top"><span class="sk-icon">${s.icon}</span><span class="sk-name">${s.name}</span><span class="sk-ver">v${s.version}</span></div>
+    <div class="sk-desc">${s.description}</div>
+    <div class="sk-examples">
+      ${s.landing_examples.map(ex=>`
+        <div class="sk-ex" onclick="launch('${s.id}','${esc(ex)}')">
+          <span class="sk-ex-lbl">Try →</span><span>${esc(ex)}</span>
+        </div>`).join('')}
+    </div>
+    <div class="sk-footer">
+      <span class="sk-cat">${s.category}</span>
+      <span class="sk-tool">tools: ${s.tools.join(', ')}</span>
+      <button class="sk-launch" onclick="launch('${s.id}','${esc(s.landing_examples[0])}')">Open →</button>
+    </div>
+    <div class="sk-src"><div class="sk-src-dot"></div>skills/${s.folder}/SKILL.md</div>
+  </div>`;
+}
+
+function launch(id,example){
+  document.getElementById('qi').value=example;
+  setView('chat');
+  setTimeout(sendQ,80);
+}
+function rerun(q){document.getElementById('qi').value=q;setView('chat');setTimeout(sendQ,80);}
+
+// CHAT
+async function sendQ(){
+  const el=document.getElementById('qi');
+  const q=el.value.trim();if(!q)return;
+  el.value='';ar(el);
+  const skill=activeSkill?SKILLS.find(s=>s.id===activeSkill)||routeSkill(q):routeSkill(q);
+  addMsg('user',q);
+  const ld=addLoading(skill);
+  const t0=Date.now();
+  await new Promise(r=>setTimeout(r,1200+Math.random()*400));
+  ld.remove();
+  const ms=Date.now()-t0;
+  renderResult(q,skill,ms);
+  recent.unshift({q,icon:skill.icon,name:skill.name,ms});
+  if(recent.length>10)recent.pop();
+  renderLanding(SKILLS.find(s=>s.id===activeSkill)||null);
+}
+
+function addMsg(type,text){
+  const d=document.createElement('div');d.className='msg';
+  if(type==='user'){d.className+=' msg-user';d.innerHTML=`<div class="bub">${esc(text)}</div>`;}
+  document.getElementById('msgs').appendChild(d);sb();return d;
+}
+function addLoading(skill){
+  const d=document.createElement('div');d.className='msg msg-agent';
+  d.innerHTML=`<div class="a-hdr"><div class="a-ico">⚡</div>Routing → <span class="tag tag-skill">${skill.icon} ${skill.name}</span></div><div class="loading-bub"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
+  document.getElementById('msgs').appendChild(d);sb();return d;
+}
+
+function renderResult(q,skill,ms){
+  let inner='';
+  if(skill.id==='data_analysis'||skill.id==='hr_analytics') inner=sqlResult(skill);
+  else if(skill.id==='document_processing') inner=docResult(q,skill);
+  else if(skill.id==='web_research') inner=researchResult(skill);
+  else if(skill.id==='code_assistant') inner=codeResult(q,skill);
+  const d=document.createElement('div');d.className='msg msg-agent';
+  d.innerHTML=`<div class="a-hdr">
+    <div class="a-ico">⚡</div>Skill Agent
+    <span class="tag tag-skill">${skill.icon} ${skill.name}</span>
+    <span class="tag tag-src">skills/${skill.folder}/PROMPT.md</span>
+    <span class="tag tag-tool">${skill.tools[0]}</span>
+    <span class="tag tag-ok">${ms}ms</span>
+  </div>${inner}`;
+  document.getElementById('msgs').appendChild(d);sb();
+}
+
+function sqlResult(skill){
+  const sql=`SELECT region, SUM(revenue) AS total_revenue\nFROM \`proj.dataset.sales\`\nWHERE DATE(date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)\nGROUP BY region ORDER BY total_revenue DESC`;
+  const rows=[{region:'APAC',total_revenue:'$1,842,300'},{region:'NA',total_revenue:'$1,621,800'},{region:'EMEA',total_revenue:'$1,204,500'},{region:'LatAm',total_revenue:'$488,200'}];
+  const cols=Object.keys(rows[0]);
+  return `<div class="rc">
+    <div class="rc-sum">APAC led with $1.84M in revenue over the past 90 days, ahead of NA at $1.62M. EMEA contributed $1.2M while LatAm trails at $488K — a gap worth addressing in the next planning cycle.</div>
+    <div class="rc-sql"><div class="lbl">SQL generated from ${skill.folder}/PROMPT.md → sql_generation_prompt</div><pre>${esc(sql)}</pre></div>
+    <div class="rc-tbl-wrap"><table class="rc-tbl"><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${esc(String(r[c]))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="rc-foot"><span class="tag tag-ok">✓ 4 rows</span><span class="tag tag-src">${skill.folder}/SKILL.md v${skill.version}</span></div></div>`;
+}
+
+function docResult(q,skill){
+  return `<div class="rc"><div class="doc-body">
+    <div class="doc-headline">Q3 delivered 18% growth driven by APAC expansion and new enterprise deals, partially offset by LatAm headwinds.</div>
+    <div class="doc-sec"><div class="doc-lbl">Key points</div>
+      <div class="doc-item">18% overall growth in Q3, above the 14% target</div>
+      <div class="doc-item">APAC expansion was the primary growth driver this quarter</div>
+      <div class="doc-item">New enterprise deals contributed significantly to revenue uplift</div>
+      <div class="doc-item">LatAm underperformance remains a risk to address in Q4</div>
+    </div>
+    <div class="doc-sec"><div class="doc-lbl">Action items</div>
+      <div class="doc-item">Review LatAm strategy before Q4 planning</div>
+      <div class="doc-item">Double down on APAC enterprise pipeline</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span class="sent s-pos">positive</span><span style="font-size:10px;color:var(--faint)">~38 words</span></div>
+    <div class="rc-foot" style="margin-top:10px;padding:0"><span class="tag tag-src">${skill.folder}/PROMPT.md → analysis_prompt</span></div>
+  </div></div>`;
+}
+
+function researchResult(skill){
+  return `<div class="rc">
+    <div class="res-ans">Enterprise AI adoption has accelerated sharply, with 65% of large companies now deploying LLMs in production. Agentic systems and RAG architectures are the dominant patterns in 2025.</div>
+    <div class="res-findings">
+      <div class="doc-lbl" style="padding:0 0 6px">Key findings</div>
+      <div class="res-f">Agentic AI replacing simple chatbots as the dominant enterprise deployment pattern</div>
+      <div class="res-f">RAG now standard for enterprise knowledge bases and internal search</div>
+      <div class="res-f">AI governance tooling seeing 3× investment growth YoY</div>
+      <div class="res-f">Gemini and GPT-4o most widely adopted models in corporate deployments</div>
+    </div>
+    <div class="res-srcs">
+      <div class="doc-lbl" style="padding:0 0 5px">Sources</div>
+      <div class="res-src">Gartner AI in Enterprise Report 2025</div>
+      <div class="res-src">McKinsey State of AI Q1 2025</div>
+      <div class="res-src">Google Cloud Next 2025 announcements</div>
+    </div>
+    <span class="conf c-h">high confidence</span>
+    <div class="rc-foot"><span class="tag tag-src">${skill.folder}/PROMPT.md → research_prompt</span></div>
+  </div>`;
+}
+
+function codeResult(q,skill){
+  const code=`def execute_sql(sql: str) -> list[dict]:\n    """Execute BigQuery SQL and return rows."""\n    from google.cloud import bigquery\n    client = bigquery.Client()\n    return [dict(row) for row in client.query(sql).result()]`;
+  return `<div class="rc"><div class="code-body">
+    <div class="code-exp">The function connects to BigQuery using the default credentials, runs the provided SQL query, and returns results as a list of dictionaries — one per row.</div>
+    <div class="doc-lbl" style="margin-bottom:6px">Generated code</div>
+    <div class="code-block"><pre>${esc(code)}</pre></div>
+    <div class="doc-sec" style="margin-top:10px"><div class="doc-lbl">Suggestions</div>
+      <div class="sugg-item">Add project_id parameter for multi-project environments</div>
+      <div class="sugg-item">Wrap in try/except and log the query on failure</div>
+    </div>
+    <div class="rc-foot"><span class="tag tag-src">${skill.folder}/PROMPT.md → generate_prompt</span></div>
+  </div></div>`;
+}
+
+function hk(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendQ();}}
+function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,90)+'px';}
+function sb(){const c=document.getElementById('msgs');c.scrollTop=c.scrollHeight;}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script>
+</body>
+</html>

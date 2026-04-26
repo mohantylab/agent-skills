@@ -1,0 +1,42 @@
+{
+  "skill_id": "data_analysis",
+  "version": "2.0.0",
+  "examples": [
+    {
+      "id": "ex_001",
+      "label": "Revenue by region",
+      "question": "Show me revenue by region for the last 90 days",
+      "expected_skill": "data_analysis",
+      "expected_sql_contains": ["SUM(revenue)", "GROUP BY region", "DATE_SUB"],
+      "expected_output_keys": ["summary", "sql", "rows", "row_count"]
+    },
+    {
+      "id": "ex_002",
+      "label": "Top products",
+      "question": "Which 5 products had the highest units sold in January 2025?",
+      "expected_skill": "data_analysis",
+      "expected_sql_contains": ["SUM(units_sold)", "LIMIT 5", "ORDER BY"]
+    },
+    {
+      "id": "ex_003",
+      "label": "Customer growth",
+      "question": "How many enterprise customers signed up each month this year?",
+      "expected_skill": "data_analysis",
+      "expected_sql_contains": ["DATE_TRUNC", "plan = 'enterprise'", "GROUP BY"]
+    },
+    {
+      "id": "ex_004",
+      "label": "Revenue comparison",
+      "question": "Compare APAC vs NA revenue for the last two quarters",
+      "expected_skill": "data_analysis",
+      "expected_sql_contains": ["region", "CASE", "QUARTER"]
+    },
+    {
+      "id": "ex_005",
+      "label": "Order value distribution",
+      "question": "What is the average order value by customer plan type?",
+      "expected_skill": "data_analysis",
+      "expected_sql_contains": ["AVG", "plan", "GROUP BY"]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "skill_id": "web_research",
+  "version": "1.1.0",
+  "examples": [
+    {"id":"ex_001","label":"AI trends","question":"What are the latest enterprise AI adoption trends in 2025?"},
+    {"id":"ex_002","label":"Competitor","question":"Give me a competitive overview of Salesforce vs HubSpot CRM"},
+    {"id":"ex_003","label":"Market size","question":"What is the current market size of the cloud data warehouse industry?"},
+    {"id":"ex_004","label":"Technology","question":"What is retrieval-augmented generation and where is it used?"},
+    {"id":"ex_005","label":"Company research","question":"What has Google announced about Gemini in the last 6 months?"}
+  ]
+}
